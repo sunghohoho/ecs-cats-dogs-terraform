@@ -1,4 +1,4 @@
-#public ecr 생성
+#private cats ecr 생성
 module "public_ecr_cats" {
   source = "terraform-aws-modules/ecr/aws"
 
@@ -29,6 +29,7 @@ module "public_ecr_cats" {
   }
 }
 
+#private cats dogs 생성
 module "public_ecr_dogs" {
   source = "terraform-aws-modules/ecr/aws"
 

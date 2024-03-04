@@ -20,7 +20,7 @@ module "vpc" {
 }
 
 # Nat gateway eip 할당
-resource "aws_eip" "nat" {
-  count = 1
-  vpc = true
-}
+# resource "aws_eip" "nat" {
+#   count = 1
+#   vpc = true
+# }
