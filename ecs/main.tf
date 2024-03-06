@@ -7,19 +7,25 @@ data "terraform_remote_state" "private_subnet_id" {
   }
 }
 
-module "ecs" {
-  source = "terraform-aws-modules/ecs/aws"
+module "ecs-cluster" {
+  source = "terraform-aws-modules/ecs/aws//modules/cluster"
 
-  cluster_name = "${var.project_name}-ecs"
+  cluster_name = "${var.project_name}-cluster"
 
+  # 서브넷 지정
+  #subnet_ids = "${data.terraform_remote_state.private_subnet_id.outputs.private_subnet_id}"
+
+  # 로깅 구성
   cluster_configuration = {
     execute_command_configuration = {
       logging = "OVERRIDE"
       log_configuration = {
-        cloud_watch_log_group_name = "/aws/ecs/${var.project_name}/aws-ec2"
+        cloud_watch_log_group_name = "/aws/ecs/aws-ec2"
       }
     }
   }
+
+  #Fargate 용량 공급자 추가
   fargate_capacity_providers = {
     FARGATE = {
       default_capacity_provider_strategy = {
@@ -33,60 +39,23 @@ module "ecs" {
     }
   }
 
-  services = {
-    "${var.project_name}-frontend" = {
-      cpu    = 1024
-      memory = 4096
+# ec2 유형 용량 공급자 추가
+  autoscaling_capacity_providers = {
+    asg = {
+      auto_scaling_group_arn         = "arn:aws:iam::866477832211:role/aws-service-role/autoscaling.amazonaws.com/AWSServiceRoleForAutoScaling"
+      managed_termination_protection = "ENABLED"
 
-      # Container definition(s)
-      container_definitions = {
-
-        fluent-bit = {
-          cpu       = 512
-          memory    = 1024
-          essential = true
-          image     = "906394416424.dkr.ecr.ap-northeast-2.amazonaws.com/aws-for-fluent-bit:stable"
-          firelens_configuration = {
-            type = "fluentbit"
-          }
-          memory_reservation = 50
-        }
-
-        ecs-sample = {
-          cpu       = 512
-          memory    = 1024
-          essential = true
-          image     = "public.ecr.aws/aws-containers/ecsdemo-frontend:776fd50"
-          port_mappings = [
-            {
-              name          = "ecs-sample"
-              containerPort = 80
-              protocol      = "tcp"
-            }
-          ]
-
-          # Example image used requires access to write to root filesystem
-          readonly_root_filesystem = false
-
-          dependencies = [{
-            containerName = "fluent-bit"
-            condition     = "START"
-          }]
-
-          enable_cloudwatch_logging = false
-          log_configuration = {
-            logDriver = "awsfirelens"
-            options = {
-              Name                    = "firehose"
-              region                  = "ap-northeast-2"
-              delivery_stream         = "my-stream"
-              log-driver-buffer-limit = "2097152"
-            }
-          }
-          memory_reservation = 100
-        }
+      managed_scaling = {
+        maximum_scaling_step_size = 5
+        minimum_scaling_step_size = 1
+        status                    = "ENABLED"
+        target_capacity           = 60
       }
-      subnet_ids = "${data.terraform_remote_state.private_subnet_id.outputs.private_subnet_id}"
-     }
+
+      default_capacity_provider_strategy = {
+        weight = 60
+        base   = 20
+      }
     }
+  }
 }
