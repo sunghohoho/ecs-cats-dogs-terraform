@@ -24,7 +24,7 @@ variable "network_mode" {
 }
 
 variable "container_mem" {
-  description = "컨테이너 메모리 할당"
+  description = "컨테이너 메모리 할당, 숫자형식의 값 필요"
   type        = number
 }
 
@@ -39,13 +39,13 @@ variable "container_url" {
 }
 
 variable "containerport" {
-  description = "컨테이너 url"
+  description = "컨테이너 포트, 숫자형식의 값 필요"
   type        = number
   default = "80"
 }
 
 variable "hostport" {
-  description = "컨테이너 url"
+  description = "컨테이너 인스턴스의 호스트 포트, 숫자형식의 값 필요"
   type        = number
   default = "0"
 }
