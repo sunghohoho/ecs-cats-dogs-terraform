@@ -8,10 +8,25 @@ data "terraform_remote_state" "ecr" {
   }
 }
 
+data "terraform_remote_state" "vpc" {
+   backend = "s3"
+  config = {
+    bucket = "sh-terraform-backend-apn2"
+    key = "network/terraform.tfstate"
+    region = "ap-northeast-2"
+  }
+}
+
 module "cluster" {
   source = "../module/ecs/cluster"
 
   project_name = var.project_name
+  is_ec2_provider = true
+
+  max_size = 4
+  min_size = 2
+  desire_size = 2
+  subnet_id = data.terraform_remote_state.vpc.outputs.private_subnet_id
 }
 
 # web 컨테이너 definition
