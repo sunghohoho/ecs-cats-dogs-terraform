@@ -3,6 +3,11 @@ variable "family" {
   type        = string
 }
 
+variable "is_fargate" {
+  description = "fargate 유형 확인"
+  type        = bool
+}
+
 variable "cpu" {
   description = "태스크 cpu"
   type        = number
@@ -49,3 +54,5 @@ variable "hostport" {
   type        = number
   default = "0"
 }
+
+
