@@ -8,6 +8,12 @@ data "terraform_remote_state" "ecr" {
   }
 }
 
+module "cluster" {
+  source = "../module/ecs/cluster"
+
+  project_name = var.project_name
+}
+
 # web 컨테이너 definition
 module "webs_task_def" {
   source = "../module/ecs/task_definition"
@@ -55,3 +61,4 @@ module "dogs_task_def" {
   containerport = "80"
   hostport = "0"
 }
+
