@@ -1,3 +1,4 @@
+
 # ecs 로깅을 위한 cloudwatch 로그 그룹 생성
 resource "aws_cloudwatch_log_group" "this" {
   name = "${var.project_name}"
@@ -19,7 +20,7 @@ resource "aws_ecs_cluster" "this" {
 }
 
 # fargate provider 추가
-resource "aws_ecs_cluster_capacity_providers" "example" {
+resource "aws_ecs_cluster_capacity_providers" "fargate" {
   cluster_name = aws_ecs_cluster.this.name
 
   capacity_providers = ["FARGATE"]
@@ -32,24 +33,14 @@ resource "aws_ecs_cluster_capacity_providers" "example" {
   depends_on = [ aws_ecs_cluster.this ]
 }
 
-
-# EC2 유형의 경우 ASG 생성
-# resource "aws_autoscaling_group" "this" {
-#   count = var.is_ec2_provider ? 1 : 0
-#   tag {
-#     key                 = "AmazonECSManaged"
-#     value               = true
-#     propagate_at_launch = true
-#   }
-# }
-
 # ec2 유형, ec2 asg provider 추가
 resource "aws_ecs_capacity_provider" "this" {
-#   count = var.is_ec2_provider ? 1 : 0
+  count = var.is_ec2_provider ? 1 : 0
   name = "${var.project_name}-ECS_CapacityProvider"
 
   auto_scaling_group_provider {
-    auto_scaling_group_arn         = aws_autoscaling_group.this.arn
+    # fargate 유형인 경우에는 null 값을 사용하여 실행되지 않게함, ec2 유형의 경우에는 아래에서 생성될 asg를 사용, count가 들어가 cound.index로 실행 인덱스 사용
+    auto_scaling_group_arn         = var.is_ec2_provider ? aws_autoscaling_group.this[count.index].arn : null
     managed_termination_protection = "ENABLED"
 
     managed_scaling {
@@ -62,15 +53,16 @@ resource "aws_ecs_capacity_provider" "this" {
 }
 
 resource "aws_ecs_cluster_capacity_providers" "cas" {
-#   count = var.is_ec2_provider ? 1 : 0
+  count = var.is_ec2_provider ? 1 : 0
   cluster_name       = aws_ecs_cluster.this.name
-  capacity_providers = [aws_ecs_capacity_provider.this.name]
+  # ec2 유형일 경우에는 ec2의 capacity provider를 사용합니다. count 변수 사용
+  capacity_providers = var.is_ec2_provider ? [aws_ecs_capacity_provider.this[count.index].name] : null
 }
 
 # ec2 유형 ecs asg 정의
 
 resource "aws_autoscaling_group" "this" {
-#   count = var.is_ec2_provider ? 1 : 0
+  count = var.is_ec2_provider ? 1 : 0
   name                  = "${var.project_name}_ASG_cas"
   max_size              = var.max_size
   min_size              = var.min_size
@@ -103,8 +95,6 @@ resource "aws_autoscaling_group" "this" {
   }
 
   tag {
-    # key                 = "Name"
-    # value               = "${var.project_name}_ASG_cas"
     propagate_at_launch = true
     key                 = "AmazonECSManaged"
     value               = true

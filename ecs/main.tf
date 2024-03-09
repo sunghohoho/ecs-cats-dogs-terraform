@@ -21,7 +21,7 @@ module "cluster" {
   source = "../module/ecs/cluster"
 
   project_name = var.project_name
-  is_ec2_provider = true
+  is_ec2_provider = false
 
   max_size = 4
   min_size = 2
@@ -39,7 +39,7 @@ module "webs_task_def" {
   container_cpu = "512"
   container_mem = "1024"
   network_mode = "bridge"
-  container_name = "cats"
+  container_name = "webs_container"
   container_url = "${data.terraform_remote_state.ecr.outputs.webs-ecr}"
   containerport = "80"
   hostport = "80"
@@ -55,7 +55,7 @@ module "cats_task_def" {
   container_cpu = "512"
   container_mem = "1024"
   network_mode = "bridge"
-  container_name = "cats"
+  container_name = "cats_container"
   container_url = "${data.terraform_remote_state.ecr.outputs.cats-ecr}"
   containerport = "80"
   hostport = "0"
@@ -71,7 +71,7 @@ module "dogs_task_def" {
   container_cpu = "512"
   container_mem = "1024"
   network_mode = "awsvpc"
-  container_name = "cats"
+  container_name = "dogs_container"
   container_url = "${data.terraform_remote_state.ecr.outputs.dogs-ecr}"
   containerport = "80"
   hostport = "0"
