@@ -1,3 +1,4 @@
+# ecr 값 가져오기
 data "terraform_remote_state" "ecr" {
    backend = "s3"
   config = {
@@ -7,10 +8,7 @@ data "terraform_remote_state" "ecr" {
   }
 }
 
-locals {
-  env = "terraform"
-}
-
+# web 컨테이너 definition
 module "webs_task_def" {
   source = "../module/ecs/task_definition"
   is_fargate = false
@@ -26,6 +24,7 @@ module "webs_task_def" {
   hostport = "80"
 }
 
+# cats 컨테이니ㅓ defnition
 module "cats_task_def" {
   source = "../module/ecs/task_definition"
   is_fargate = false
@@ -37,6 +36,22 @@ module "cats_task_def" {
   network_mode = "bridge"
   container_name = "cats"
   container_url = "${data.terraform_remote_state.ecr.outputs.cats-ecr}"
+  containerport = "80"
+  hostport = "0"
+}
+
+# dogs 컨테이너 defnition
+module "dogs_task_def" {
+  source = "../module/ecs/task_definition"
+  is_fargate = true
+  family = "${var.project_name}-dogs"
+  cpu = "1024"
+  mem = "2048"
+  container_cpu = "512"
+  container_mem = "1024"
+  network_mode = "awsvpc"
+  container_name = "cats"
+  container_url = "${data.terraform_remote_state.ecr.outputs.dogs-ecr}"
   containerport = "80"
   hostport = "0"
 }

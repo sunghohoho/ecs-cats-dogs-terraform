@@ -4,9 +4,12 @@ resource "aws_ecs_task_definition" "this" {
   family = var.family
   # is_fargate 값이 true 면 faragate, false면 EC2
   requires_compatibilities = var.is_fargate ? ["FARGATE"] : ["EC2"]
+  execution_role_arn = "arn:aws:iam::866477832211:role/ecsTaskExecutionRole"
+  task_role_arn = "arn:aws:iam::866477832211:role/ecsTaskExecutionRole"
 
   cpu = var.cpu
-  network_mode = var.network_mode
+  #faragte면 awsvpc, 아닌 경우 입력 값
+  network_mode = var.is_fargate ? "awsvpc" : var.network_mode
   memory = var.mem
 
   runtime_platform {
@@ -24,7 +27,7 @@ resource "aws_ecs_task_definition" "this" {
         portMappings = [
             {
             containerPort = "${var.containerport}"
-            hostPort      = "${var.hostport}"
+            hostPort      = "${var.is_fargate}" ? "${var.containerport}" : "${var.hostport}"
             }
         ]
     }
