@@ -1,4 +1,4 @@
-data "terraform_remote_state" "cats-ecr" {
+data "terraform_remote_state" "ecr" {
    backend = "s3"
   config = {
     bucket = "sh-terraform-backend-apn2"
@@ -7,16 +7,21 @@ data "terraform_remote_state" "cats-ecr" {
   }
 }
 
+locals {
+  env = "terraform"
+}
+
 module "cats_task_def" {
   source = "../module/ecs/task_definition"
-
-  family = "cats"
-  cpu = "1"
-  mem = "2"
-  container_cpu = "1"
-  container_mem = "1"
+  is_fargate = false
+  family = "${var.project_name}-cats"
+  cpu = "1024"
+  mem = "2048"
+  container_cpu = "512"
+  container_mem = "1024"
   network_mode = "bridge"
   container_name = "cats"
-  container_url = "${data.terraform_remote_state.cats-ecr.outputs.cats-ecr}"
+  container_url = "${data.terraform_remote_state.ecr.outputs.cats-ecr}"
   containerport = "80"
+  hostport = "0"
 }
