@@ -2,8 +2,8 @@ data "aws_region" "currnet" {}
 
 resource "aws_ecs_task_definition" "this" {
   family = var.family
-
-  requires_compatibilities = ["FARGATE", "EC2"]
+  # is_fargate 값이 true 면 faragate, false면 EC2
+  requires_compatibilities = var.is_fargate ? ["FARGATE"] : ["EC2"]
 
   cpu = var.cpu
   network_mode = var.network_mode
