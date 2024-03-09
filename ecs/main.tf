@@ -21,7 +21,7 @@ module "cluster" {
   source = "../module/ecs/cluster"
 
   project_name = var.project_name
-  is_ec2_provider = false
+  is_ec2_provider = true
 
   max_size = 4
   min_size = 2
