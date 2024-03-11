@@ -21,7 +21,7 @@ module "cluster" {
   source = "../module/ecs/cluster"
 
   project_name = var.project_name
-  is_ec2_provider = true
+  is_ec2_provider = false
 
   max_size = 4
   min_size = 2
@@ -77,3 +77,20 @@ module "dogs_task_def" {
   hostport = "0"
 }
 
+
+
+module "webs-svc" {
+  source = "../module/ecs/service"
+  name = "${var.project_name}-web-svc"
+  cluster = module.cluster.cluster_name # 추가 필요
+  task_definition = module.webs_task_def.task_definition # 추가필요
+
+  desired_count = 2
+
+  target_group = module.alb.target_group_arn
+
+  container_name = "webs"
+  container_port = module.webs_task_def.hostport
+
+  subnet = data.terraform_remote_state.vpc.outputs.private_subnet_id
+}
