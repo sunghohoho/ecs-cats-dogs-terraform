@@ -45,7 +45,6 @@ module "ecs-instance-sg" {
       description = "@@@@@@@@@@User-service ports@@@@@@"
       cidr_blocks = "10.10.0.0/16"
     },
-
   ]
 }
 
