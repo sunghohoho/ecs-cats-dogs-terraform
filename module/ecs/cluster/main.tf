@@ -60,7 +60,7 @@ resource "aws_ecs_cluster_capacity_providers" "cas" {
 }
 
 # ec2 유형 ecs asg 정의
-
+# public ecs instance ami 사용
 resource "aws_launch_configuration" "this" {
   name_prefix   = "${var.project_name}-ecs-lt"
   image_id      = "ami-0f69a3951250c72a4"
