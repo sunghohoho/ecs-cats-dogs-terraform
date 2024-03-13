@@ -61,6 +61,12 @@ resource "aws_ecs_cluster_capacity_providers" "cas" {
 
 # ec2 유형 ecs asg 정의
 
+resource "aws_launch_configuration" "this" {
+  name_prefix   = "${var.project_name}-ecs-lt"
+  image_id      = "ami-0f69a3951250c72a4"
+  instance_type = "t3.micro"
+}
+
 resource "aws_autoscaling_group" "this" {
   count = var.is_ec2_provider ? 1 : 0
   name                  = "${var.project_name}_ASG_cas"
@@ -82,7 +88,7 @@ resource "aws_autoscaling_group" "this" {
   ]
 
   launch_template {
-    id      = "lt-0c31ff941618673e2"
+    id      = aws_autoscaling_group.this.id
     version = "$Latest"
   }
 
