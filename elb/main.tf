@@ -22,8 +22,7 @@ module "ecs-svc-alb" {
 
   name = "${var.project_name}-svc-alb"
 
-#   subnets         = data.terraform_remote_state.vpc.outputs.private_subnet_id
-  subnets         = ["subnet-8e5890d1", "subnet-f133748a"]
+  subnets         = data.terraform_remote_state.vpc.outputs.public_subnet_id
   security_groups = ["sg-040cad4414ebaa895"]
   internal        = false
 
@@ -45,7 +44,7 @@ module "ecs-svc-alb" {
   }
 
   // ELB attachments
-  number_of_instances = 1
+  number_of_instances = 0
 
   tags = {
     Terraform = "true"
@@ -53,6 +52,10 @@ module "ecs-svc-alb" {
   }
 }
 
-resource "aws_lb_tar" "name" {
-  
+resource "aws_lb_target_group" "this" {
+  name        = "${var.project_name}-svc-tg"
+  target_type = "alb"
+  port        = 80
+  protocol    = "TCP"
+  vpc_id      = data.terraform_remote_state.vpc.outputs.vpc_id
 }
