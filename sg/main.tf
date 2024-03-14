@@ -30,6 +30,7 @@ module "ecs-svc-alb-sg" {
       cidr_blocks = "0.0.0.0/0"
     }
   ]
+  # outbound 0 - 65535 anywhere 추가
   egress_with_cidr_blocks = [
       {
       from_port   = 0
@@ -39,6 +40,8 @@ module "ecs-svc-alb-sg" {
       cidr_blocks = "0.0.0.0/0"
     }
   ]
+  # outbound anywhere 추가
+  egress_rules = ["all-all"]
 }
 
 
