@@ -1,12 +1,12 @@
 # Default Region
 provider "aws" {
-    region = "us-east-1"
+  region = var.default_region
 }
 
 terraform {
   backend "s3" {
     bucket = "sh-terraform-backend-apn2"
-    key = "iam/terraform.tfstate"
+    key = "network/terraform.tfstate"
     region = "ap-northeast-2"
   }
 }

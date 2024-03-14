@@ -77,8 +77,6 @@ module "dogs_task_def" {
   hostport = "0"
 }
 
-
-
 module "webs-svc" {
   source = "../module/ecs/service"
   name = "${var.project_name}-web-svc"
