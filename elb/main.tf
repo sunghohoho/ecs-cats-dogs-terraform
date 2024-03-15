@@ -145,8 +145,3 @@ resource "aws_lb_listener" "this"{
   }
 }
 
-# resource "aws_lb_target_group_attachment" "this" {
-#   target_group_arn = aws_lb_target_group.this.arn
-#   target_id        = "i-09b004f89888aeb00"
-#   port             = 80
-# }

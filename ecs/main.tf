@@ -17,11 +17,30 @@ data "terraform_remote_state" "vpc" {
   }
 }
 
+data "terraform_remote_state" "elb" {
+   backend = "s3"
+  config = {
+    bucket = "sh-terraform-backend-apn2"
+    key = "elb/terraform.tfstate"
+    region = "ap-northeast-2"
+  }
+}
+
+data "terraform_remote_state" "sg" {
+   backend = "s3"
+  config = {
+    bucket = "sh-terraform-backend-apn2"
+    key = "sg/terraform.tfstate"
+    region = "ap-northeast-2"
+  }
+}
+
+# cluster 생성
 module "cluster" {
   source = "../module/ecs/cluster"
 
   project_name = var.project_name
-  is_ec2_provider = false
+  is_ec2_provider = true
 
   max_size = 4
   min_size = 2
@@ -80,15 +99,17 @@ module "dogs_task_def" {
 module "webs-svc" {
   source = "../module/ecs/service"
   name = "${var.project_name}-web-svc"
-  cluster = module.cluster.cluster_name # 추가 필요
-  task_definition = module.webs_task_def.task_definition # 추가필요
+  cluster = module.cluster.cluster_name 
+  task_definition = module.webs_task_def.task_def_arn 
+  launch_type = "EC2"
+  is_fargate = false
 
   desired_count = 2
 
-  target_group = module.alb.target_group_arn
+  target_group = data.terraform_remote_state.elb.outputs.elb_target_arn
 
-  container_name = "webs"
-  container_port = module.webs_task_def.hostport
+  container_name = "webs_container"
+  container_port = 80
 
   subnet = data.terraform_remote_state.vpc.outputs.private_subnet_id
 }
