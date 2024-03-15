@@ -1,4 +1,11 @@
-
+data "terraform_remote_state" "sg" {
+   backend = "s3"
+  config = {
+    bucket = "sh-terraform-backend-apn2"
+    key = "sg/terraform.tfstate"
+    region = "ap-northeast-2"
+  }
+}
 # ecs 로깅을 위한 cloudwatch 로그 그룹 생성
 resource "aws_cloudwatch_log_group" "this" {
   name = "${var.project_name}"
@@ -52,6 +59,7 @@ resource "aws_ecs_capacity_provider" "this" {
   }
 }
 
+# ec2 유형의 경우 asg의 capacity provider 추가 필요
 resource "aws_ecs_cluster_capacity_providers" "cas" {
   count = var.is_ec2_provider ? 1 : 0
   cluster_name       = aws_ecs_cluster.this.name
@@ -59,14 +67,19 @@ resource "aws_ecs_cluster_capacity_providers" "cas" {
   capacity_providers = var.is_ec2_provider ? [aws_ecs_capacity_provider.this[count.index].name] : null
 }
 
-# ec2 유형 ecs asg 정의
+# ec2 유형 ecs asg launch template 정의
 # public ecs instance ami 사용
-resource "aws_launch_configuration" "this" {
-  name_prefix   = "${var.project_name}-ecs-lt"
+resource "aws_launch_template" "this" {
+  name_prefix   = "lt-${var.project_name}ecs"
   image_id      = "ami-0f69a3951250c72a4"
   instance_type = "t3.micro"
+  security_group_names = [data.terraform_remote_state.sg.outputs.ecs-ec2-instance-sg]
+  iam_instance_profile {
+    arn = "arn:aws:iam::866477832211:instance-profile/ecsInstanceRole"
+  }
 }
 
+# ec2 유형의 asg 구성
 resource "aws_autoscaling_group" "this" {
   count = var.is_ec2_provider ? 1 : 0
   name                  = "${var.project_name}_ASG_cas"
@@ -88,7 +101,7 @@ resource "aws_autoscaling_group" "this" {
   ]
 
   launch_template {
-    id      = aws_autoscaling_group.this.id
+    id      = aws_launch_template.this.id
     version = "$Latest"
   }
 

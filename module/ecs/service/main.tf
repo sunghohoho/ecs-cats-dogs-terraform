@@ -1,10 +1,11 @@
 resource "aws_ecs_service" "this" {
   name = var.name
   cluster = var.cluster
-  task_definition = var.task_definition
-  desired_count = var.desired_count
+  task_definition = var.is_fargate ? null : var.task_definition
+  desired_count =  var.desired_count
+  launch_type = var.launch_type
 
-  iam_role = "arn:aws:iam::866477832211:role/ecsTaskExecutionRole"
+  # iam_role = "arn:aws:iam::866477832211:role/aws-service-role/ecs.amazonaws.com/AWSServiceRoleForECS"
 
   ordered_placement_strategy {
     type  = "binpack"

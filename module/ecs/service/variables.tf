@@ -38,7 +38,13 @@ variable "subnet" {
   type        = list(string)
 }
 
-# variable "svcsg" {
-#   description = "Project Name"
-#   type        = string
-# }
+variable "is_fargate" {
+  description = "Project Name"
+  type        = bool
+}
+
+variable "launch_type" {
+  description = "Project Name"
+  type        = string
+}
+
