@@ -45,29 +45,38 @@ module "ecs-svc-alb-sg" {
 }
 
 
-module "vote_service_sg" {
+module "ecs-ec2-instance-sg" {
   source = "terraform-aws-modules/security-group/aws"
 
-  name        = "user-service"
-  description = "Security group for user-service with custom ports open within VPC, and PostgreSQL publicly open"
+  name        = "ecs-ec2-instance-sg"
+  description = "ecs ec2 provider ec2 securirty group, 80 access, 1111 access"
   vpc_id      = data.terraform_remote_state.vpc.outputs.vpc_id
-
-  ingress_cidr_blocks      = ["10.10.0.0/16"]
-  ingress_rules            = ["https-443-tcp"]
+  
+  # inbound 그룹 추가
   ingress_with_cidr_blocks = [
+    # http anywhere 추가
     {
-      from_port   = 8080
-      to_port     = 8090
-      protocol    = "tcp"
-      description = "User-service ports"
-      cidr_blocks = "10.10.0.0/16"
-    },
-    {
-      rule        = "postgresql-tcp"
+      rule        = "http-80-tcp"
       cidr_blocks = "0.0.0.0/0"
     },
+    # 1111 - 3333 anywhere 추가
+    {
+      from_port   = 1111
+      to_port     = 3333
+      protocol    = "tcp"
+      description = "User-service ports"
+      cidr_blocks = "0.0.0.0/0"
+    },
+    {
+      rule        = "ssh-tcp"
+      cidr_blocks = "0.0.0.0/0"
+    }
   ]
-   egress_cidr_blocks = ["0.0.0.0/0"]
+
+  # outbound anywhere 추가
+  egress_rules = ["all-all"]
 }
+
+
 
 
