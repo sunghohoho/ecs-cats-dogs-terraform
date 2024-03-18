@@ -84,6 +84,13 @@ resource "aws_ecs_cluster_capacity_providers" "cas" {
  depends_on = [ aws_ecs_cluster.this ]
 }
 
+locals {
+    ecs_ec2provider_script = <<-EOF
+    #!/bin/bash
+    echo ECS_CLUSTER=${aws_ecs_cluster.this.name} >> /etc/ecs/ecs.config
+  EOF
+}
+
 # ec2 유형 ecs asg launch template 정의
 # public ecs instance ami 사용
 resource "aws_launch_template" "this" {
@@ -91,10 +98,12 @@ resource "aws_launch_template" "this" {
   name   = "${var.project_name}-ecs-lt"
   image_id      = "ami-0f69a3951250c72a4"
   instance_type = "t3.micro"
+  key_name = "test"
   vpc_security_group_ids = [data.terraform_remote_state.sg.outputs.ecs-ec2-instance-sg]
   iam_instance_profile {
     arn = "arn:aws:iam::866477832211:instance-profile/ecsInstanceRole"
   }
+  user_data = base64encode(local.ecs_ec2provider_script)
 }
 
 # ec2 유형의 asg 구성
