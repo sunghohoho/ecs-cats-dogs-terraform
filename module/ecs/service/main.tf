@@ -1,7 +1,8 @@
 resource "aws_ecs_service" "this" {
   name = var.name
   cluster = var.cluster
-  task_definition = var.is_fargate ? null : var.task_definition
+  # task_definition = var.is_fargate ? null : var.task_definition
+  task_definition = var.task_definition
   desired_count =  var.desired_count
   launch_type = var.launch_type
 
@@ -24,7 +25,6 @@ resource "aws_ecs_service" "this" {
   }
 
   network_configuration {
-    subnets = var.subnet
-    # security_groups = var.svcsg
+    subnets = var.is_fargate ? var.subnet : null
   }
 }

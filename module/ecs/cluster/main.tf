@@ -84,6 +84,7 @@ resource "aws_ecs_cluster_capacity_providers" "cas" {
  depends_on = [ aws_ecs_cluster.this ]
 }
 
+# EC2 인스턴스, 클러스터에 귀속하는 스크립트
 locals {
     ecs_ec2provider_script = <<-EOF
     #!/bin/bash

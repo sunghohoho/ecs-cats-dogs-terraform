@@ -36,6 +36,7 @@ variable "container_port" {
 variable "subnet" {
   description = "Project Name"
   type        = list(string)
+  default = null
 }
 
 variable "is_fargate" {
@@ -47,4 +48,6 @@ variable "launch_type" {
   description = "Project Name"
   type        = string
 }
+
+
 
