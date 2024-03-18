@@ -35,6 +35,20 @@ data "terraform_remote_state" "sg" {
   }
 }
 
+# bastion
+resource "aws_instance" "this" {
+  ami = "ami-0ac9b8202b45eeb08"
+
+  key_name = "test"
+  instance_type = "t3.micro"
+  subnet_id = data.terraform_remote_state.vpc.outputs.public_subnet_id[0]
+  associate_public_ip_address = true
+  tags = {
+    Name = "${var.project_name}-bastion"
+    Terraform = true
+  }
+}
+
 # cluster 생성
 module "cluster" {
   source = "../module/ecs/cluster"
@@ -47,14 +61,6 @@ module "cluster" {
   desire_size = 2
   subnet_id = data.terraform_remote_state.vpc.outputs.private_subnet_id
 }
-
-# module "cluster2" {
-#   source = "../module/ecs/cluster"
-
-#   project_name = "${var.project_name}-fargate"
-#   is_ec2_provider = false
-
-# }
 
 # web 컨테이너 definition
 # module "webs_task_def" {
