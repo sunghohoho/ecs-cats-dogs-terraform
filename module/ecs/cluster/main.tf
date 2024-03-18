@@ -6,12 +6,12 @@ data "terraform_remote_state" "sg" {
     region = "ap-northeast-2"
   }
 }
-# ecs 로깅을 위한 cloudwatch 로그 그룹 생성
+# ecs 로깅을 위한 cloudwatch 로그 그룹 생성 (0)
 resource "aws_cloudwatch_log_group" "this" {
   name = "${var.project_name}"
 }
 
-#ecs 클러스터 생성
+#ecs 클러스터 생성 (1)
 resource "aws_ecs_cluster" "this" {
   name = "${var.project_name}-cluster"
 
@@ -26,7 +26,7 @@ resource "aws_ecs_cluster" "this" {
   }
 }
 
-# fargate provider 추가
+# fargate provider 추가 (1), fargate의 경우 aws_ecs_cluster_capacity_provider - Fargate 를 사용
 resource "aws_ecs_cluster_capacity_providers" "fargate" {
   cluster_name = aws_ecs_cluster.this.name
 
@@ -40,14 +40,14 @@ resource "aws_ecs_cluster_capacity_providers" "fargate" {
   depends_on = [ aws_ecs_cluster.this ]
 }
 
-# ec2 유형, ec2 asg provider 추가
+# ec2 유형, ec2 asg provider 추가 (1), ec2 유형의 경우 ecs_capacity_provider를 사용
 resource "aws_ecs_capacity_provider" "this" {
   count = var.is_ec2_provider ? 1 : 0
   name = "${var.project_name}-ECS_CapacityProvider"
 
   auto_scaling_group_provider {
     # fargate 유형인 경우에는 null 값을 사용하여 실행되지 않게함, ec2 유형의 경우에는 아래에서 생성될 asg를 사용, count가 들어가 cound.index로 실행 인덱스 사용
-    auto_scaling_group_arn         = var.is_ec2_provider ? aws_autoscaling_group.this[count.index].arn : null
+    auto_scaling_group_arn         = aws_autoscaling_group.this[count.index].arn
     managed_termination_protection = "ENABLED"
 
     managed_scaling {
@@ -70,10 +70,11 @@ resource "aws_ecs_cluster_capacity_providers" "cas" {
 # ec2 유형 ecs asg launch template 정의
 # public ecs instance ami 사용
 resource "aws_launch_template" "this" {
-  name_prefix   = "lt-${var.project_name}ecs"
+  count = var.is_ec2_provider ? 1 : 0
+  name   = "${var.project_name}-ecs-lt"
   image_id      = "ami-0f69a3951250c72a4"
   instance_type = "t3.micro"
-  security_group_names = [data.terraform_remote_state.sg.outputs.ecs-ec2-instance-sg]
+  vpc_security_group_ids = [data.terraform_remote_state.sg.outputs.ecs-ec2-instance-sg]
   iam_instance_profile {
     arn = "arn:aws:iam::866477832211:instance-profile/ecsInstanceRole"
   }
@@ -82,7 +83,7 @@ resource "aws_launch_template" "this" {
 # ec2 유형의 asg 구성
 resource "aws_autoscaling_group" "this" {
   count = var.is_ec2_provider ? 1 : 0
-  name                  = "${var.project_name}_ASG_cas"
+  name                  = "${var.project_name}-ASG"
   max_size              = var.max_size
   min_size              = var.min_size
   vpc_zone_identifier   = var.subnet_id
@@ -101,7 +102,7 @@ resource "aws_autoscaling_group" "this" {
   ]
 
   launch_template {
-    id      = aws_launch_template.this.id
+    id      = aws_launch_template.this[count.index].id
     version = "$Latest"
   }
 
