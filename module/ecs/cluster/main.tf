@@ -26,8 +26,13 @@ resource "aws_ecs_cluster" "this" {
   }
 }
 
+#######################################
+# Fargate 유형 
+#######################################
+
 # fargate provider 추가 (1), fargate의 경우 aws_ecs_cluster_capacity_provider - Fargate 를 사용
 resource "aws_ecs_cluster_capacity_providers" "fargate" {
+  count = var.is_ec2_provider ? 0 : 1
   cluster_name = aws_ecs_cluster.this.name
 
   capacity_providers = ["FARGATE"]
@@ -39,6 +44,10 @@ resource "aws_ecs_cluster_capacity_providers" "fargate" {
   }
   depends_on = [ aws_ecs_cluster.this ]
 }
+
+#######################################
+# EC2 유형 
+#######################################
 
 # ec2 유형, ec2 asg provider 추가 (1), ec2 유형의 경우 ecs_capacity_provider를 사용
 resource "aws_ecs_capacity_provider" "this" {
@@ -64,7 +73,15 @@ resource "aws_ecs_cluster_capacity_providers" "cas" {
   count = var.is_ec2_provider ? 1 : 0
   cluster_name       = aws_ecs_cluster.this.name
   # ec2 유형일 경우에는 ec2의 capacity provider를 사용합니다. count 변수 사용
-  capacity_providers = var.is_ec2_provider ? [aws_ecs_capacity_provider.this[count.index].name] : null
+  # capacity_providers = var.is_ec2_provider ? [aws_ecs_capacity_provider.this[count.index].name] : null
+  capacity_providers = [aws_ecs_capacity_provider.this[count.index].name]
+
+   default_capacity_provider_strategy {
+   base              = 1
+   weight            = 100
+   capacity_provider = aws_ecs_capacity_provider.this[count.index].name
+ }
+ depends_on = [ aws_ecs_cluster.this ]
 }
 
 # ec2 유형 ecs asg launch template 정의

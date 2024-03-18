@@ -54,10 +54,6 @@ module "cluster" {
 #   project_name = "${var.project_name}-fargate"
 #   is_ec2_provider = false
 
-#   # max_size = 4
-#   # min_size = 2
-#   # desire_size = 2
-#   # subnet_id = data.terraform_remote_state.vpc.outputs.private_subnet_id
 # }
 
 # web 컨테이너 definition
