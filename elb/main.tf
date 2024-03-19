@@ -83,22 +83,6 @@ resource "aws_lb_target_group" "cats" {
   }
 }
 
-# 80 리스너 생성
-resource "aws_lb_listener" "this"{
-  load_balancer_arn = aws_lb.this.arn
-  port = 80
-  protocol = "HTTP"
-  default_action {
-      type = "forward"
-      target_group_arn = aws_lb_target_group.webs.arn
-  }
-  tags = {
-    Environment = "dev"
-    Terraform = "true"
-    Terragrunt = "true"
-  }
-}
-
 # 파게이트 유형의 경우, 타겟타입이 ip로 지정 필요
 resource "aws_lb_target_group" "fargate" {
   name        = "${var.project_name}-svc-tg-fargate"
@@ -112,6 +96,22 @@ resource "aws_lb_target_group" "fargate" {
     path                = "/"
     healthy_threshold   = 3
     unhealthy_threshold = 3
+  }
+  tags = {
+    Environment = "dev"
+    Terraform = "true"
+    Terragrunt = "true"
+  }
+}
+
+# 80 리스너 생성
+resource "aws_lb_listener" "this"{
+  load_balancer_arn = aws_lb.this.arn
+  port = 80
+  protocol = "HTTP"
+  default_action {
+      type = "forward"
+      target_group_arn = aws_lb_target_group.webs.arn
   }
   tags = {
     Environment = "dev"
