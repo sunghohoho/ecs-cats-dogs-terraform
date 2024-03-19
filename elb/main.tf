@@ -25,75 +25,7 @@ data "terraform_remote_state" "sg" {
   }
 }
 
-# # 모듈 안됨 ㅠㅠ
-# module "ecs-svc-alb" {
-#   source = "terraform-aws-modules/alb/aws"
-
-#   name    = "${var.project_name}-svc-alb"
-#   vpc_id  = data.terraform_remote_state.vpc.outputs.vpc_id
-#   subnets = data.terraform_remote_state.vpc.outputs.public_subnet_id
-
-#   # Security Group
-#   security_group_ingress_rules = {
-#     all_http = {
-#       from_port   = 80
-#       to_port     = 80
-#       ip_protocol = "tcp"
-#       description = "HTTP web traffic"
-#       cidr_ipv4   = "0.0.0.0/0"
-#     }
-#     all_https = {
-#       from_port   = 443
-#       to_port     = 443
-#       ip_protocol = "tcp"
-#       description = "HTTPS web traffic"
-#       cidr_ipv4   = "0.0.0.0/0"
-#     }
-#   }
-#   security_group_egress_rules = {
-#     all = {
-#       ip_protocol = "-1"
-#       cidr_ipv4   = "0.0.0.0/0"
-#     }
-#   }
-
-#   #리스너
-#   listeners = {
-#     ex-http-https-redirect = {
-#       port     = 80
-#       protocol = "HTTP"
-#       redirect = {
-#         port        = "443"
-#         protocol    = "HTTPS"
-#         status_code = "HTTP_301"
-#       }
-#     }
-#     ex-https = {
-#       port            = 443
-#       protocol        = "HTTPS"
-#       certificate_arn = "arn:aws:acm:ap-northeast-2:866477832211:certificate/91db58e2-f929-44d2-b194-f6fa6be7f9cb"
-#       forward = {
-#         target_group_key = "ex-instance"
-#       }
-#     }
-#   }
-
-#   target_groups = {
-#     ex-instance = {
-#       name_prefix      = "h1"
-#       protocol         = "HTTP"
-#       port             = 80
-#       target_type      = "instance"
-#     }
-#   }
-
-#   tags = {
-#     Environment = "dev"
-#     Terraform = "true"
-#     Terragrunt = "true"
-#   }
-# }
-
+# service alb 생성
 resource "aws_lb" "this"{
   name = "${var.project_name}-svc-alb"
   internal = false	 
@@ -110,6 +42,7 @@ resource "aws_lb" "this"{
   }
 }
 
+# ec2 유형의 타겟그룹 생성
 resource "aws_lb_target_group" "this" {
   name        = "${var.project_name}-svc-tg"
   target_type = "instance"
@@ -130,6 +63,7 @@ resource "aws_lb_target_group" "this" {
   }
 }
 
+# 80 리스너 생성
 resource "aws_lb_listener" "this"{
   load_balancer_arn = aws_lb.this.arn
   port = 80
@@ -145,3 +79,40 @@ resource "aws_lb_listener" "this"{
   }
 }
 
+# 파게이트 유형의 경우, 타겟타입이 ip로 지정 필요
+resource "aws_lb_target_group" "fargate" {
+  name        = "${var.project_name}-svc-tg-fargate"
+  target_type = "ip"
+  port        = 80
+  protocol    = "HTTP"
+  vpc_id      = data.terraform_remote_state.vpc.outputs.vpc_id
+
+  health_check {
+    interval            = 30
+    path                = "/"
+    healthy_threshold   = 3
+    unhealthy_threshold = 3
+  }
+  tags = {
+    Environment = "dev"
+    Terraform = "true"
+    Terragrunt = "true"
+  }
+}
+
+# dogs 경로로 포워딩 되는 경우 수정 fargate 타겟그룹으로 가도록 구성
+resource "aws_lb_listener_rule" "fargate" {
+  listener_arn = aws_lb_listener.this.arn
+  priority     = 2
+
+  action {
+    type             = "forward"
+    target_group_arn = aws_lb_target_group.fargate.arn
+  }
+
+  condition {
+    path_pattern {
+      values = ["/dogs*"]
+    }
+  }
+}
