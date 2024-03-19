@@ -56,7 +56,7 @@ module "cluster" {
   project_name = var.project_name
   is_ec2_provider = true
 
-  max_size = 4
+  max_size = 2
   min_size = 2
   desire_size = 2
   subnet_id = data.terraform_remote_state.vpc.outputs.private_subnet_id
@@ -68,9 +68,9 @@ module "webs_task_def" {
   is_fargate = false
   family = "${var.project_name}-webs"
   cpu = "1024"
-  mem = "2048"
+  mem = "512"
   container_cpu = "512"
-  container_mem = "1024"
+  container_mem = "512"
   network_mode = "bridge"
   container_name = "webs_container"
   container_url = "${data.terraform_remote_state.ecr.outputs.webs-ecr}"
@@ -84,9 +84,9 @@ module "cats_task_def" {
   is_fargate = false
   family = "${var.project_name}-cats"
   cpu = "1024"
-  mem = "2048"
+  mem = "512"
   container_cpu = "512"
-  container_mem = "1024"
+  container_mem = "512"
   network_mode = "bridge"
   container_name = "cats_container"
   container_url = "${data.terraform_remote_state.ecr.outputs.cats-ecr}"
@@ -110,18 +110,57 @@ module "dogs_task_def" {
   hostport = "0"
 }
 
-# module "webs-svc" {
-#   source = "../module/ecs/service"
-#   name = "${var.project_name}-web-svc"
-#   cluster = module.cluster.cluster_name 
-#   task_definition = module.webs_task_def.task_def_arn 
-#   launch_type = "EC2"
-#   is_fargate = 
+resource "aws_autoscaling_attachment" "ecs-svc-alb-ec2" {
+  autoscaling_group_name = module.cluster.ec2_asg_arn
+  lb_target_group_arn    = data.terraform_remote_state.elb.outputs.elb_target_arn
+}
 
-#   desired_count = 2
+module "webs-svc" {
+  source = "../module/ecs/service"
+  name = "${var.project_name}-web-svc"
+  cluster = module.cluster.cluster_name 
+  task_definition = module.webs_task_def.task_def_arn 
+  launch_type = "EC2"
+  is_fargate = false
 
-#   target_group = data.terraform_remote_state.elb.outputs.elb_target_arn
+  desired_count = 2
 
-#   container_name = "webs_container"
-#   container_port = 80
-# }
+  target_group = data.terraform_remote_state.elb.outputs.elb_target_arn
+
+  container_name = "webs_container"
+  container_port = 80
+}
+
+module "cats-svc" {
+  source = "../module/ecs/service"
+  name = "${var.project_name}-cat-svc"
+  cluster = module.cluster.cluster_name 
+  task_definition = module.cats_task_def.task_def_arn 
+  launch_type = "EC2"
+  is_fargate = false
+
+  desired_count = 2
+
+  target_group = data.terraform_remote_state.elb.outputs.elb_target_arn
+
+  container_name = "cats_container"
+  container_port = 80
+}
+
+module "dogs-svc" {
+  source = "../module/ecs/service"
+  name = "${var.project_name}-dog-svc"
+  cluster = module.cluster.cluster_name 
+  task_definition = module.dogs_task_def.task_def_arn 
+  launch_type = "FARGATE"
+  is_fargate = true
+
+  desired_count = 2
+
+  target_group = data.terraform_remote_state.elb.outputs.elb_target_fargate_arn
+
+  container_name = "dogs_container"
+  container_port = 80
+  subnet = data.terraform_remote_state.vpc.outputs.private_subnet_id
+}
+
