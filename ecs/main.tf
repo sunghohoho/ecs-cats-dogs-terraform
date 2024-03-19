@@ -141,7 +141,7 @@ module "cats-svc" {
 
   desired_count = 2
 
-  target_group = data.terraform_remote_state.elb.outputs.elb_target_arn
+  target_group = data.terraform_remote_state.elb.outputs.elb_target_web_arn
 
   container_name = "cats_container"
   container_port = 80

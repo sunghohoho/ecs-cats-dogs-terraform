@@ -42,9 +42,29 @@ resource "aws_lb" "this"{
   }
 }
 
-# ec2 유형의 타겟그룹 생성
-resource "aws_lb_target_group" "this" {
-  name        = "${var.project_name}-svc-tg"
+# web 페이지로 향할 타겟그룹 생성
+resource "aws_lb_target_group" "webs" {
+  name        = "${var.project_name}-svc-webs-tg"
+  target_type = "instance"
+  port        = 80
+  protocol    = "HTTP"
+  vpc_id      = data.terraform_remote_state.vpc.outputs.vpc_id
+
+  health_check {
+    interval            = 30
+    path                = "/"
+    healthy_threshold   = 3
+    unhealthy_threshold = 3
+  }
+  tags = {
+    Environment = "dev"
+    Terraform = "true"
+    Terragrunt = "true"
+  }
+}
+
+resource "aws_lb_target_group" "cats" {
+  name        = "${var.project_name}-svc-cats-tg"
   target_type = "instance"
   port        = 80
   protocol    = "HTTP"
@@ -70,7 +90,7 @@ resource "aws_lb_listener" "this"{
   protocol = "HTTP"
   default_action {
       type = "forward"
-      target_group_arn = aws_lb_target_group.this.arn
+      target_group_arn = aws_lb_target_group.webs.arn
   }
   tags = {
     Environment = "dev"
@@ -97,6 +117,23 @@ resource "aws_lb_target_group" "fargate" {
     Environment = "dev"
     Terraform = "true"
     Terragrunt = "true"
+  }
+}
+
+# cats로 향할 라우팅 규칙 추가
+resource "aws_lb_listener_rule" "web-rule" {
+  listener_arn = aws_lb_listener.this.arn
+  priority     = 1
+
+  action {
+    type             = "forward"
+    target_group_arn = aws_lb_target_group.cats.arn
+  }
+
+  condition {
+    path_pattern {
+      values = ["/cats*"]
+    }
   }
 }
 
