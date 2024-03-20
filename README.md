@@ -6,3 +6,5 @@
 
 ## FARGATE 유형의 경우 보안그룹 설정 필요
 ## 전체적인 보안그룹 룰 재지정 필요
+
+# dynamic (content), for_each, for in, try, lookup, merge, concat, distinct, coalesce
