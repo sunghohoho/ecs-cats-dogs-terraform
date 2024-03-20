@@ -162,5 +162,9 @@ module "dogs-svc" {
   container_name = "dogs_container"
   container_port = 80
   subnet = data.terraform_remote_state.vpc.outputs.private_subnet_id
+  sg = [data.terraform_remote_state.sg.outputs.ecs-fargate-sg]
 }
 
+output "elb_dns" {
+  value = data.terraform_remote_state.elb.outputs.elb-dns
+}
