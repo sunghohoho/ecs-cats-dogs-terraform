@@ -8,5 +8,9 @@ output "ecs-ec2-instance-sg" {
 }
 
 output "ecs-fargate-sg" {
-    value = module.ecs-ec2-instance-sg.security_group_id
+    value = module.ecs-fargate-sg.security_group_id
+}
+
+output "bastion-sg" {
+    value = module.bastion-sg.security_group_id
 }

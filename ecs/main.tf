@@ -43,6 +43,7 @@ resource "aws_instance" "this" {
   instance_type = "t3.micro"
   subnet_id = data.terraform_remote_state.vpc.outputs.public_subnet_id[0]
   associate_public_ip_address = true
+  security_groups = [data.terraform_remote_state.sg.outputs.bastion-sg]
   tags = {
     Name = "${var.project_name}-bastion"
     Terraform = true

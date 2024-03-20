@@ -109,6 +109,26 @@ module "ecs-fargate-sg" {
   egress_rules = ["all-all"]
 }
 
+module "bastion-sg" {
+  source = "terraform-aws-modules/security-group/aws"
+
+  name        = "bastion-sg"
+  description = "ecs bastion-sg, 22"
+  vpc_id      = data.terraform_remote_state.vpc.outputs.vpc_id
+  
+  # inbound 그룹 추가
+  ingress_with_cidr_blocks = [
+    # http anywhere 추가
+    {
+      rule        = "ssh-tcp"
+      cidr_blocks = "0.0.0.0/0"
+    },
+  ]
+
+  # outbound anywhere 추가
+  egress_rules = ["all-all"]
+}
+
 
 
 
