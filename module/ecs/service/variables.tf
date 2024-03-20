@@ -49,5 +49,11 @@ variable "launch_type" {
   type        = string
 }
 
+variable "sg" {
+  description = "Project Name"
+  type        = list(string)
+  default = null
+}
+
 
 

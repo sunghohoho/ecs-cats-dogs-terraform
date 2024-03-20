@@ -28,6 +28,7 @@ dynamic "network_configuration" {
     for_each = var.is_fargate ? [1] : []
     content {
       subnets = var.subnet
+      security_groups = var.sg
     }
   }
 }

@@ -61,8 +61,40 @@ module "ecs-ec2-instance-sg" {
     },
     # 1111 - 3333 anywhere 추가
     {
-      from_port   = 1111
-      to_port     = 3333
+      from_port   = 0
+      to_port     = 65535
+      protocol    = "tcp"
+      description = "User-service ports"
+      cidr_blocks = "0.0.0.0/0"
+    },
+    {
+      rule        = "ssh-tcp"
+      cidr_blocks = "0.0.0.0/0"
+    }
+  ]
+
+  # outbound anywhere 추가
+  egress_rules = ["all-all"]
+}
+
+module "ecs-fargate-sg" {
+  source = "terraform-aws-modules/security-group/aws"
+
+  name        = "ecs-fargate-sg"
+  description = "ecs fargate-sg, 0 - 65535"
+  vpc_id      = data.terraform_remote_state.vpc.outputs.vpc_id
+  
+  # inbound 그룹 추가
+  ingress_with_cidr_blocks = [
+    # http anywhere 추가
+    {
+      rule        = "http-80-tcp"
+      cidr_blocks = "0.0.0.0/0"
+    },
+    # 1111 - 3333 anywhere 추가
+    {
+      from_port   = 0
+      to_port     = 65535
       protocol    = "tcp"
       description = "User-service ports"
       cidr_blocks = "0.0.0.0/0"
