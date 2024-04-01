@@ -98,13 +98,23 @@ resource "aws_launch_template" "this" {
   count = var.is_ec2_provider ? 1 : 0
   name   = "${var.project_name}-ecs-lt"
   image_id      = "ami-0f69a3951250c72a4"
-  instance_type = "t3.micro"
+  instance_type = "t3.medium"
   key_name = "test"
   vpc_security_group_ids = [data.terraform_remote_state.sg.outputs.ecs-ec2-instance-sg]
   iam_instance_profile {
     arn = "arn:aws:iam::866477832211:instance-profile/ecsInstanceRole"
   }
+  # launch template에 userdata 사용
   user_data = base64encode(local.ecs_ec2provider_script)
+
+  # asg로 생성되는 인스턴스에 name 태그 지정
+  tag_specifications {
+    resource_type = "instance"
+
+    tags = {
+      Name = "${var.project_name}-ec2-provider"
+    }
+  }
 }
 
 # ec2 유형의 asg 구성
