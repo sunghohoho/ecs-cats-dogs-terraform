@@ -1,3 +1,4 @@
+# VPC 생성 모듈
 module "vpc" {
   source = "terraform-aws-modules/vpc/aws"
 
@@ -16,9 +17,4 @@ module "vpc" {
     Environment = "${var.project_name}"
   }
 
-}
-
-resource "aws_eip" "nat" {
-  count = 1
-  vpc = true
 }
