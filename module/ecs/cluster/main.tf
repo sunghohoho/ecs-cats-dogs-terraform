@@ -1,3 +1,5 @@
+data "aws_caller_identity" "current" {}
+
 data "terraform_remote_state" "sg" {
    backend = "s3"
   config = {
@@ -102,7 +104,7 @@ resource "aws_launch_template" "this" {
   key_name = "test"
   vpc_security_group_ids = [data.terraform_remote_state.sg.outputs.ecs-ec2-instance-sg]
   iam_instance_profile {
-    arn = "arn:aws:iam::866477832211:instance-profile/ecsInstanceRole"
+    arn = "arn:aws:iam::${data.aws_caller_identity.current.account_id}:instance-profile/ecsInstanceRole"
   }
   # launch template에 userdata 사용
   user_data = base64encode(local.ecs_ec2provider_script)

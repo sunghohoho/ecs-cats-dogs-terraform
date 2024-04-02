@@ -114,6 +114,8 @@ module "dogs_task_def" {
 resource "aws_autoscaling_attachment" "ecs-svc-alb-ec2" {
   autoscaling_group_name = module.cluster.ec2_asg_arn
   lb_target_group_arn    = data.terraform_remote_state.elb.outputs.elb_target_arn
+
+  depends_on = [ module.cluster ]
 }
 
 module "webs-svc" {
@@ -130,6 +132,8 @@ module "webs-svc" {
 
   container_name = "webs_container"
   container_port = 80
+
+  depends_on = [ aws_autoscaling_attachment.ecs-svc-alb-ec2 ]
 }
 
 module "cats-svc" {
@@ -146,6 +150,8 @@ module "cats-svc" {
 
   container_name = "cats_container"
   container_port = 80
+
+  depends_on = [ aws_autoscaling_attachment.ecs-svc-alb-ec2 ]
 }
 
 module "dogs-svc" {

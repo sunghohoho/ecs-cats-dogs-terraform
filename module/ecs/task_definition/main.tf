@@ -1,11 +1,13 @@
+data "aws_caller_identity" "current" {}
+
 data "aws_region" "currnet" {}
 
 resource "aws_ecs_task_definition" "this" {
   family = var.family
   # is_fargate 값이 true 면 faragate, false면 EC2
   requires_compatibilities = var.is_fargate ? ["FARGATE"] : ["EC2"]
-  execution_role_arn = "arn:aws:iam::866477832211:role/ecsTaskExecutionRole"
-  task_role_arn = "arn:aws:iam::866477832211:role/ecsTaskExecutionRole"
+  execution_role_arn = "arn:aws:iam::${data.aws_caller_identity.current.account_id}:role/ecsTaskExecutionRole"
+  task_role_arn = "arn:aws:iam::${data.aws_caller_identity.current.account_id}:role/ecsTaskExecutionRole"
 
   cpu = var.cpu
   #faragte면 awsvpc, 아닌 경우 입력 값

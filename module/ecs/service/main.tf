@@ -1,3 +1,5 @@
+data "aws_caller_identity" "current" {}
+
 resource "aws_ecs_service" "this" {
   name = var.name
   cluster = var.cluster
@@ -5,7 +7,7 @@ resource "aws_ecs_service" "this" {
   desired_count =  var.desired_count
   launch_type = var.launch_type
 
-  iam_role = var.is_fargate ?  null : "arn:aws:iam::866477832211:role/aws-service-role/ecs.amazonaws.com/AWSServiceRoleForECS"
+  iam_role = var.is_fargate ?  null : "arn:aws:iam::${data.aws_caller_identity.current.account_id}:role/aws-service-role/ecs.amazonaws.com/AWSServiceRoleForECS"
 
   # ordered_placement_strategy {
   #   type  = "binpack"
