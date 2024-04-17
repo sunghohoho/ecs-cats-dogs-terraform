@@ -4,7 +4,7 @@ include "root" {
 
 # network, sg, elb 생성 후 ecs 생성
 dependencies {
-  paths = ["../network", "../sg", "../elb", "../acm", "../ecs"]
+  paths = ["../network", "../sg", "../elb", "../ecs"]
 }
 
 
