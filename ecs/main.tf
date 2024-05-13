@@ -44,10 +44,16 @@ resource "aws_instance" "this" {
   subnet_id = data.terraform_remote_state.vpc.outputs.public_subnet_id[0]
   associate_public_ip_address = true
   security_groups = [data.terraform_remote_state.sg.outputs.bastion-sg]
+  user_data                   = <<EOF
+  #! /bin/bash
+  cd ~
+  echo "hi im bastion" > README.md
+  EOF
   tags = {
     Name = "${var.project_name}-bastion"
     Terraform = true
   }
+
 }
 
 # cluster 생성

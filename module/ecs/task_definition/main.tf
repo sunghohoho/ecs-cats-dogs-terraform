@@ -40,6 +40,7 @@ resource "aws_ecs_task_definition" "this" {
             awslogs-region        = "ap-northeast-2"
             awslogs-create-group  = "true"
             awslogs-stream-prefix = "abc-ecs"
+            awslogs-datetime-format= "'%Y-%m-%d %H+9:%M:%S%L'"
           }
         }
     }
