@@ -32,6 +32,16 @@ resource "aws_ecs_task_definition" "this" {
             hostPort      = "${var.is_fargate}" ? "${var.containerport}" : "${var.hostport}"
             }
         ]
+        # 로깅을 위한 awslogs 드라이버 구성, create 옵션이 없으면 task 안뜸
+        logConfiguration = {
+          logDriver = "awslogs"
+          options = {
+            awslogs-group         = "${var.container_name}/task/log"
+            awslogs-region        = "ap-northeast-2"
+            awslogs-create-group  = "true"
+            awslogs-stream-prefix = "abc-ecs"
+          }
+        }
     }
     ])
 }
