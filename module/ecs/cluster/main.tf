@@ -26,6 +26,10 @@ resource "aws_ecs_cluster" "this" {
       }
     }
   }
+  setting {
+    name  = "containerInsights"
+    value = "enabled"
+  }
 }
 
 #######################################
